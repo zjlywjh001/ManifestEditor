@@ -15,6 +15,10 @@
  */
 package pxb.android.axml;
 
+import com.wind.meditor.property.ModificationProperty;
+import com.wind.meditor.utils.NodeValue;
+import com.wind.meditor.visitor.ApplicationTagVisitor;
+
 import static pxb.android.axml.AxmlParser.END_FILE;
 import static pxb.android.axml.AxmlParser.END_NS;
 import static pxb.android.axml.AxmlParser.END_TAG;
@@ -24,6 +28,8 @@ import static pxb.android.axml.AxmlParser.START_TAG;
 import static pxb.android.axml.AxmlParser.TEXT;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 /**
@@ -42,6 +48,10 @@ public class AxmlReader {
 	};
 	final AxmlParser parser;
 
+	private List<ModificationProperty.MetaData> deleteMetaDataList = null;
+
+	private List<ModificationProperty.MetaData> metaDataList;
+
 	public AxmlReader(byte[] data) {
 		super();
 		this.parser = new AxmlParser(data);
@@ -57,13 +67,54 @@ public class AxmlReader {
 				break;
 			case START_TAG:
 				nvs.push(tos);
-				tos = tos.child(parser.getNamespaceUri(), parser.getName());
+				boolean isdeleted = false;
+				if (parser.getName().equals(NodeValue.MetaData.TAG_NAME)) {
+					for (int i = 0; i < parser.getAttrCount(); i++) {
+						if (parser.getAttrName(i).equals("name")) {
+							for (ModificationProperty.MetaData dmd:this.deleteMetaDataList) {
+								if (dmd.getName().equals(parser.getAttrValue(i))) {
+									isdeleted = true;
+								}
+							}
+						}
+					}
+				}
+				if (isdeleted) {
+					tos = EMPTY_VISITOR;
+				}
+				else {
+					tos = tos.child(parser.getNamespaceUri(), parser.getName());
+				}
 				if (tos != null) {
 					if (tos != EMPTY_VISITOR) {
 						tos.line(parser.getLineNumber());
+						ModificationProperty.MetaData modifyMata = null;
 						for (int i = 0; i < parser.getAttrCount(); i++) {
-							tos.attr(parser.getAttrNs(i), parser.getAttrName(i), parser.getAttrResId(i),
-									parser.getAttrType(i), parser.getAttrValue(i));
+							if (parser.getName().equals(NodeValue.MetaData.TAG_NAME)) {
+								for (ModificationProperty.MetaData mmd:this.metaDataList) {
+									if (("name".equals(parser.getAttrName(i))) && (mmd.getName().equals(parser.getAttrValue(i)))) {
+										//System.out.println("Existing meta-data name = "+mmd.getName());
+										ApplicationTagVisitor.AddExistingMetaName(mmd.getName());
+										tos.attr(parser.getAttrNs(i), parser.getAttrName(i), parser.getAttrResId(i),
+												parser.getAttrType(i), parser.getAttrValue(i));
+										modifyMata = mmd;
+										break;
+									}
+
+								}
+
+								if ((modifyMata!=null) && "value".equals(parser.getAttrName(i))) {
+									//System.out.println("Modify meta-data Vlaue = "+modifyMata.getValue());
+									tos.attr(parser.getAttrNs(i), parser.getAttrName(i), parser.getAttrResId(i),
+											parser.getAttrType(i), modifyMata.getValue());
+								} else {
+										tos.attr(parser.getAttrNs(i), parser.getAttrName(i), parser.getAttrResId(i),
+												parser.getAttrType(i), parser.getAttrValue(i));
+								}
+							} else {
+								tos.attr(parser.getAttrNs(i), parser.getAttrName(i), parser.getAttrResId(i),
+										parser.getAttrType(i), parser.getAttrValue(i));
+							}
 						}
 					}
 				} else {
@@ -88,5 +139,12 @@ public class AxmlReader {
 				System.err.println("AxmlReader: Unsupported tag: " + type);
 			}
 		}
+	}
+
+	public void setMetaDataList(List<ModificationProperty.MetaData> metalist) {
+		this.metaDataList = metalist;
+	}
+	public void setDeleteMetaDataList(List<ModificationProperty.MetaData> dellist) {
+		this.deleteMetaDataList = dellist;
 	}
 }

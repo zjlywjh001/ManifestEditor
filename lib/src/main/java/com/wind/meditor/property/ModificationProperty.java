@@ -82,5 +82,6 @@ public class ModificationProperty {
         public String getValue() {
             return value;
         }
+
     }
 }

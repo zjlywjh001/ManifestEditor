@@ -56,6 +56,8 @@ public class ManifestEditor {
         byte[] bytes = Utils.getBytesFromInputStream(inputStream);
 
         AxmlReader reader = new AxmlReader(bytes);
+        reader.setDeleteMetaDataList(properties.getDeleteMetaDataList());
+        reader.setMetaDataList(properties.getMetaDataList());
         AxmlWriter writer = new AxmlWriter();
 
         try {

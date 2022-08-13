@@ -4,6 +4,7 @@ import com.wind.meditor.property.AttributeItem;
 import com.wind.meditor.property.ModificationProperty;
 import com.wind.meditor.utils.NodeValue;
 
+import java.util.ArrayList;
 import java.util.List;
 import pxb.android.axml.NodeVisitor;
 
@@ -18,12 +19,15 @@ public class ApplicationTagVisitor extends ModifyAttributeVisitor {
 
     private static final String META_DATA_FLAG = "meta_data_flag";
 
+    public static ArrayList<String> existingMetaData = null;
+
     ApplicationTagVisitor(NodeVisitor nv, List<AttributeItem> modifyAttributeList,
                           List<ModificationProperty.MetaData> metaDataList,
                           List<ModificationProperty.MetaData> deleteMetaDataList) {
         super(nv, modifyAttributeList);
         this.metaDataList = metaDataList;
         this.deleteMetaDataList = deleteMetaDataList;
+
     }
 
     @Override
@@ -52,9 +56,18 @@ public class ApplicationTagVisitor extends ModifyAttributeVisitor {
     public void end() {
         if (metaDataList != null) {
             for (ModificationProperty.MetaData data : metaDataList) {
-                addChild(data);
+                if (!existingMetaData.contains(data.getName())) {
+                    addChild(data);
+                }
             }
         }
         super.end();
+    }
+
+    public static void AddExistingMetaName(String name) {
+        if (existingMetaData == null) {
+            existingMetaData = new ArrayList<String>();
+        }
+        existingMetaData.add(name);
     }
 }
