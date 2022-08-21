@@ -3,6 +3,7 @@ package com.wind.meditor;
 import com.wind.meditor.base.BaseCommand;
 import com.wind.meditor.core.ApkSigner;
 import com.wind.meditor.core.FileProcesser;
+import com.wind.meditor.core.ManifestEditor;
 import com.wind.meditor.property.AttributeItem;
 import com.wind.meditor.property.ModificationProperty;
 import com.wind.meditor.utils.FileTypeUtils;
@@ -28,6 +29,9 @@ public class ManifestEditorMain extends BaseCommand {
 
     @Opt(opt = "f", longOpt = "force", hasArg = false, description = "force overwrite")
     private boolean forceOverwrite = false;
+
+    @Opt(opt = "cep", longOpt = "coexisting", hasArg = false, description = "Generate new Co-existing Package. Package name specified in -pkg param. if new package name not specified, it will be generated automatically.")
+    private boolean coexist = false;
 
     @Opt(opt = "s", longOpt = "signApk", hasArg = false, description = "use jarsigner to sign the output apk file")
     private boolean needSignApk = false;
@@ -142,7 +146,13 @@ public class ManifestEditorMain extends BaseCommand {
 
         Log.i("output file path --> " + output);
 
+
         ModificationProperty modificationProperty = composeProperty();
+        if (coexist) {
+            String oldN = new ManifestEditor(srcFilePath,  output, null).readPackageName();
+            System.out.println("Old Package Name: "+oldN);
+            modificationProperty.setCoexistInfo(true,oldN,Utils.isNullOrEmpty(packageName)?null:packageName);
+        }
 
         if (isMainfestFile) {
             Log.i("Start to process manifest file ");

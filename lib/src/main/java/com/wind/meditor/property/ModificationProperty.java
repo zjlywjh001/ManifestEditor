@@ -3,6 +3,9 @@ package com.wind.meditor.property;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.wind.meditor.utils.NodeValue;
+import org.apache.commons.text.RandomStringGenerator;
+
 /**
  * 修改的参数
  *
@@ -16,6 +19,12 @@ public class ModificationProperty {
 
     private List<AttributeItem> applicationAttributeList = new ArrayList<>();
     private List<AttributeItem> manifestAttributeList = new ArrayList<>();
+
+    private boolean coexist_on = false;
+
+    private String oldPackageName;
+
+    private String newPackageName;
 
     public List<String> getUsesPermissionList() {
         return usesPermissionList;
@@ -83,5 +92,32 @@ public class ModificationProperty {
             return value;
         }
 
+    }
+
+    public void setCoexistInfo(boolean on, String oldN,String newN) {
+        this.coexist_on = on;
+        this.oldPackageName = oldN;
+        this.newPackageName = newN;
+        if (this.newPackageName == null) {
+            char [][] pairs = {{'a','z'},{'A','Z'}};
+            String pkgsuffix = new RandomStringGenerator.Builder().withinRange(pairs).build().generate(3);
+            this.newPackageName = this.oldPackageName + "." +pkgsuffix;
+            System.out.println("New package name not set, auto generated: "+this.newPackageName);
+            this.addManifestAttribute(new AttributeItem(NodeValue.Manifest.PACKAGE, this.newPackageName).setNamespace(null));
+        } else {
+            System.out.println("New package name: "+this.newPackageName);
+        }
+    }
+
+    public String getOldPackageName() {
+        return this.oldPackageName;
+    }
+
+    public String getNewPackageName() {
+        return this.newPackageName;
+    }
+
+    public boolean isCoexist_on() {
+        return this.coexist_on;
     }
 }

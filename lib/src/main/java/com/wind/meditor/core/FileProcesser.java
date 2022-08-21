@@ -82,4 +82,8 @@ public class FileProcesser {
     public static void processManifestFile(String srcManifestPath, String dstManifestPath, ModificationProperty property) {
         new ManifestEditor(srcManifestPath, dstManifestPath, property).processManifest();
     }
+
+    public static String readPackageNameFromFile(String srcManifestPath) {
+        return "";
+    }
 }

@@ -3,7 +3,7 @@ allprojects  {
     apply plugin: 'maven'
     apply plugin: 'idea'
     apply plugin: 'eclipse'
-    version = '1.0.3'
+    version = '1.0.4'
 }
 
 defaultTasks('clean','distZip')
@@ -21,6 +21,7 @@ subprojects {
     [compileJava, compileTestJava]*.options.collect {options ->options.encoding = 'UTF-8'}
 
     dependencies {
+        compile 'org.apache.commons:commons-text:1.9'
         compile fileTree(dir: 'libs', include: '*.jar')
     }
 

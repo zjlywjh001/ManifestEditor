@@ -18,6 +18,7 @@ package pxb.android.axml;
 import com.wind.meditor.property.ModificationProperty;
 import com.wind.meditor.utils.NodeValue;
 import com.wind.meditor.visitor.ApplicationTagVisitor;
+import org.apache.commons.text.RandomStringGenerator;
 
 import static pxb.android.axml.AxmlParser.END_FILE;
 import static pxb.android.axml.AxmlParser.END_NS;
@@ -52,9 +53,18 @@ public class AxmlReader {
 
 	private List<ModificationProperty.MetaData> metaDataList;
 
+	private boolean coexist = false;
+
+	private String oldPackageName = null;
+
+	private String newPackageName = null;
+
+	private String providerSuffix = null;
+
 	public AxmlReader(byte[] data) {
 		super();
 		this.parser = new AxmlParser(data);
+		this.coexist = false;
 	}
 
 	public void accept(final AxmlVisitor av) throws IOException {
@@ -68,7 +78,7 @@ public class AxmlReader {
 			case START_TAG:
 				nvs.push(tos);
 				boolean isdeleted = false;
-				if (parser.getName().equals(NodeValue.MetaData.TAG_NAME)) {
+				if (parser.getName().equals(NodeValue.MetaData.TAG_NAME) && (this.deleteMetaDataList != null)) {
 					for (int i = 0; i < parser.getAttrCount(); i++) {
 						if (parser.getAttrName(i).equals("name")) {
 							for (ModificationProperty.MetaData dmd:this.deleteMetaDataList) {
@@ -90,7 +100,43 @@ public class AxmlReader {
 						tos.line(parser.getLineNumber());
 						ModificationProperty.MetaData modifyMata = null;
 						for (int i = 0; i < parser.getAttrCount(); i++) {
-							if (parser.getName().equals(NodeValue.MetaData.TAG_NAME)) {
+							if (this.coexist) {
+//								if (parser.getName().equals("manifest") && parser.getAttrName(i).equals("package")) {
+//									System.out.println("Set "+parser.getAttrName(i)+"="+this.newPackageName);
+//									tos.attr(parser.getAttrNs(i), parser.getAttrName(i), parser.getAttrResId(i),
+//											parser.getAttrType(i), this.newPackageName);
+//								}
+								if (parser.getName().equals("permission") && parser.getAttrName(i).equals("name")) {
+									if (((String)parser.getAttrValue(i)).contains(this.oldPackageName)) {
+										String newperm = ((String)parser.getAttrValue(i)).replace(this.oldPackageName,this.newPackageName);
+										tos.attr(parser.getAttrNs(i), parser.getAttrName(i), parser.getAttrResId(i),
+												parser.getAttrType(i), newperm);
+										//System.out.println("Set permission: "+parser.getAttrName(i)+"="+newperm);
+									}
+
+								}
+								if (parser.getName().equals("uses-permission") && parser.getAttrName(i).equals("name")) {
+									if (((String)parser.getAttrValue(i)).contains(this.oldPackageName)) {
+										String newperm = ((String)parser.getAttrValue(i)).replace(this.oldPackageName,this.newPackageName);
+										tos.attr(parser.getAttrNs(i), parser.getAttrName(i), parser.getAttrResId(i),
+												parser.getAttrType(i), newperm);
+										//System.out.println("Set uses-permission: "+parser.getAttrName(i)+"="+newperm);
+									}
+
+								}
+								if (parser.getName().equals("provider") && parser.getAttrName(i).equals("authorities")) {
+									if (this.providerSuffix == null) {
+										char [][] pairs = {{'a','z'},{'0','9'},{'A','Z'}};
+										this.providerSuffix = new RandomStringGenerator.Builder().withinRange(pairs).build().generate(3);
+
+									}
+									String newperm = ((String)parser.getAttrValue(i)).concat("."+this.providerSuffix);
+									tos.attr(parser.getAttrNs(i), parser.getAttrName(i), parser.getAttrResId(i),
+											parser.getAttrType(i), newperm);
+									//System.out.println("Set provider: "+parser.getAttrName(i)+"="+newperm);
+								}
+							}
+							if (parser.getName().equals(NodeValue.MetaData.TAG_NAME) && (this.metaDataList!=null)) {
 								for (ModificationProperty.MetaData mmd:this.metaDataList) {
 									if (("name".equals(parser.getAttrName(i))) && (mmd.getName().equals(parser.getAttrValue(i)))) {
 										//System.out.println("Existing meta-data name = "+mmd.getName());
@@ -146,5 +192,15 @@ public class AxmlReader {
 	}
 	public void setDeleteMetaDataList(List<ModificationProperty.MetaData> dellist) {
 		this.deleteMetaDataList = dellist;
+	}
+
+	public void setPackageNamePair(String oldN, String newN) {
+		this.oldPackageName = oldN;
+		this.newPackageName = newN;
+
+	}
+
+	public void set_coexist(boolean on) {
+		this.coexist = on;
 	}
 }

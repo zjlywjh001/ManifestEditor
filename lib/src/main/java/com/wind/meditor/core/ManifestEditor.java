@@ -12,10 +12,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import pxb.android.axml.AxmlReader;
-import pxb.android.axml.AxmlVisitor;
-import pxb.android.axml.AxmlWriter;
-import pxb.android.axml.NodeVisitor;
+import com.wind.meditor.visitor.PackageNameReaderVisitor;
+import pxb.android.axml.*;
 
 public class ManifestEditor {
 
@@ -26,6 +24,8 @@ public class ManifestEditor {
     private ModificationProperty properties;
 
     private boolean needClosedStream = false;
+
+    public String oldPackageName = "";
 
     public ManifestEditor(String srcManifestFilePath, String dstManifestFilePath,
                           ModificationProperty properties) {
@@ -58,6 +58,8 @@ public class ManifestEditor {
         AxmlReader reader = new AxmlReader(bytes);
         reader.setDeleteMetaDataList(properties.getDeleteMetaDataList());
         reader.setMetaDataList(properties.getMetaDataList());
+        reader.set_coexist(properties.isCoexist_on());
+        reader.setPackageNamePair(properties.getOldPackageName(), properties.getNewPackageName());
         AxmlWriter writer = new AxmlWriter();
 
         try {
@@ -84,5 +86,28 @@ public class ManifestEditor {
                 Utils.close(outputStream);
             }
         }
+    }
+
+    public String readPackageName() {
+        if (inputStream == null) {
+            Log.i(" readPackageName failed , inputStream = " + inputStream);
+            return null;
+        }
+//        byte[] bytes = Utils.getBytesFromFile(srcManifestFilePath);
+        byte[] bytes = Utils.getBytesFromInputStream(inputStream);
+        AxmlReader reader = new AxmlReader(bytes);
+        PackageNameReaderVisitor pnv = new PackageNameReaderVisitor("",this);
+        try {
+            reader.accept(new AxmlVisitor(pnv));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (needClosedStream) {
+            Utils.close(inputStream);
+            Utils.close(outputStream);
+        }
+
+        return this.oldPackageName;
     }
 }
