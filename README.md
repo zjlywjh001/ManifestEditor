@@ -26,10 +26,13 @@ options:
  -aa,--applicationAttribute <application-attribute-name-value>
                              set the application attribute,  name and value shou
                              ld be separated by : , if name is in android namesp
-                             ace, prefix "android-" should be set, multi option 
+                             ace, prefix "android-" should be set, multi option
                              is supported
  -an,--applicationName <new-application-name>
                              set the app entry application name
+ -cep,--coexisting           Generate new Co-existing Package. Package name spec
+                             ified in -pkg param. if new package name not specif
+                             ied, it will be generated automatically.
  -d,--debuggable <0 or 1>    set 1 to make the app debuggable = true, set 0 to m
                              ake the app debuggable = false
  -dmd,--deleteMetaDataList <delete-meta-data-name>
@@ -54,7 +57,7 @@ options:
                              le, multi option is supported
  -vc,--versionCode <new-version-code>set the app version code
  -vn,--versionName <new-version-name>set the app version name
-version: 1.0.2
+version: 1.0.5
 ```
 # **修改Manifest文件**
 ### 1. 修改Manifest中app包名: `-pkg`
