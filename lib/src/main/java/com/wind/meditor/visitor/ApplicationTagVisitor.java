@@ -56,7 +56,7 @@ public class ApplicationTagVisitor extends ModifyAttributeVisitor {
     public void end() {
         if (metaDataList != null) {
             for (ModificationProperty.MetaData data : metaDataList) {
-                if (!existingMetaData.contains(data.getName())) {
+                if ((existingMetaData==null) || (!existingMetaData.contains(data.getName()))) {
                     addChild(data);
                 }
             }
